@@ -64,18 +64,33 @@ jobs:
           set -euxo pipefail
           sudo apt-get update
           sudo apt-get install -y build-essential libsparsehash-dev
-          bash tools/install_pytorch.sh
+          bash .github/tools/install_pytorch.sh
         CIBW_BEFORE_BUILD_WINDOWS: |
           Invoke-WebRequest -Uri "https://github.com/sparsehash/sparsehash/archive/refs/tags/sparsehash-2.0.4.zip" -OutFile "sparsehash.zip"
           Expand-Archive -Path "sparsehash.zip" -DestinationPath "C:\"
           Rename-Item "C:\sparsehash-sparsehash-2.0.4" "C:\sparsehash"
-          powershell -ExecutionPolicy Bypass -File tools/install_pytorch.ps1
-        CIBW_ENVIRONMENT_LINUX: 'CXXFLAGS="-O2 -fopenmp" CFLAGS="-O2" FORCE_CUDA=1 TORCH_CUDA_ARCH_LIST="7.5;8.0;8.6;8.9" MAX_JOBS=4 CUDA_VERSION=${{ matrix.cuda_version }} PYTORCH_VERSION=${{ github.event.inputs.pytorch_version || 'latest' }}'
-        CIBW_ENVIRONMENT_WINDOWS: 'CL=/O1 /MP4 DISTUTILS_USE_SDK=1 MSSdk=1 FORCE_CUDA=1 TORCH_CUDA_ARCH_LIST="7.5;8.0;8.6;8.9" INCLUDE=$INCLUDE;C:\\sparsehash\\src CUDA_VERSION=${{ matrix.cuda_version }} PYTORCH_VERSION=${{ github.event.inputs.pytorch_version || 'latest' }}'
+          powershell -ExecutionPolicy Bypass -File .github/tools/install_pytorch.ps1
+        CIBW_ENVIRONMENT_LINUX: >
+          CXXFLAGS="-O2 -fopenmp"
+          CFLAGS="-O2"
+          FORCE_CUDA=1
+          TORCH_CUDA_ARCH_LIST="7.5;8.0;8.6;8.9"
+          MAX_JOBS=4
+          CUDA_VERSION=${{ matrix.cuda_version }}
+          PYTORCH_VERSION=${{ github.event.inputs.pytorch_version || 'latest' }}
+        CIBW_ENVIRONMENT_WINDOWS: >
+          CL=/O1 /MP4
+          DISTUTILS_USE_SDK=1
+          MSSdk=1
+          FORCE_CUDA=1
+          TORCH_CUDA_ARCH_LIST="7.5;8.0;8.6;8.9"
+          INCLUDE=$INCLUDE;C:\sparsehash\src
+          CUDA_VERSION=${{ matrix.cuda_version }}
+          PYTORCH_VERSION=${{ github.event.inputs.pytorch_version || 'latest' }}
         CIBW_BEFORE_TEST_LINUX: |
-          bash tools/install_pytorch.sh
+          bash .github/tools/install_pytorch.sh
         CIBW_BEFORE_TEST_WINDOWS: |
-          powershell -ExecutionPolicy Bypass -File tools/install_pytorch.ps1
+          powershell -ExecutionPolicy Bypass -File .github/tools/install_pytorch.ps1
         CIBW_TEST_COMMAND_WINDOWS: "python -c \"import torch; import torchsparse; print(f'TorchSparse version: {torchsparse.__version__}')\""
         CIBW_TEST_COMMAND_LINUX: "python -c 'import torch; import torchsparse; print(f\"TorchSparse version: {torchsparse.__version__}\")'"
         CIBW_BUILD_VERBOSITY: 1
