@@ -79,12 +79,12 @@ jobs:
           CUDA_VERSION=${{ matrix.cuda_version }}
           PYTORCH_VERSION=${{ github.event.inputs.pytorch_version || 'latest' }}
         CIBW_ENVIRONMENT_WINDOWS: >
-          CL=/O1 /MP4
+          CL="/O1 /MP4"
           DISTUTILS_USE_SDK=1
           MSSdk=1
           FORCE_CUDA=1
           TORCH_CUDA_ARCH_LIST="7.5;8.0;8.6;8.9"
-          INCLUDE=$INCLUDE;C:\sparsehash\src
+          INCLUDE="$INCLUDE;C:\sparsehash\src"
           CUDA_VERSION=${{ matrix.cuda_version }}
           PYTORCH_VERSION=${{ github.event.inputs.pytorch_version || 'latest' }}
         CIBW_BEFORE_TEST_LINUX: |
@@ -151,7 +151,7 @@ jobs:
       if: matrix.platform.os == 'windows-2022'
       uses: Jimver/cuda-toolkit@v0.2.23
       with:
-        cuda: ${{ matrix.cuda-version }}.0
+        cuda: ${{ matrix.cuda_version }}.0
         method: 'network'
 
     - name: Download wheel artifacts
