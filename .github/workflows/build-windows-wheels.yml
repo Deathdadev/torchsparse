@@ -62,13 +62,13 @@ jobs:
         CIBW_SKIP: ${{ matrix.cuda_version == '11.8' && 'cp312-*' || '' }}
         CIBW_BEFORE_BUILD_LINUX: |
           set -euxo pipefail
-          sudo apt-get update
-          sudo apt-get install -y build-essential libsparsehash-dev
+          apt-get update
+          apt-get install -y build-essential libsparsehash-dev
           bash .github/tools/install_pytorch.sh
         CIBW_BEFORE_BUILD_WINDOWS: |
-          Invoke-WebRequest -Uri "https://github.com/sparsehash/sparsehash/archive/refs/tags/sparsehash-2.0.4.zip" -OutFile "sparsehash.zip"
-          Expand-Archive -Path "sparsehash.zip" -DestinationPath "C:\"
-          Rename-Item "C:\sparsehash-sparsehash-2.0.4" "C:\sparsehash"
+          powershell -Command "Invoke-WebRequest -Uri https://github.com/sparsehash/sparsehash/archive/refs/tags/sparsehash-2.0.4.zip -OutFile sparsehash.zip"
+          powershell -Command "Expand-Archive -Path sparsehash.zip -DestinationPath C:\"
+          powershell -Command "Rename-Item C:\sparsehash-sparsehash-2.0.4 C:\sparsehash"
           powershell -ExecutionPolicy Bypass -File .github/tools/install_pytorch.ps1
         CIBW_ENVIRONMENT_LINUX: >
           CXXFLAGS="-O2 -fopenmp"
@@ -151,7 +151,7 @@ jobs:
       if: matrix.platform.os == 'windows-2022'
       uses: Jimver/cuda-toolkit@v0.2.23
       with:
-        cuda: ${{ matrix.cuda_version }}.0
+        cuda: ${{ matrix.cuda-version }}.0
         method: 'network'
 
     - name: Download wheel artifacts
