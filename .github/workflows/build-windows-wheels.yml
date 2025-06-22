@@ -50,6 +50,13 @@ jobs:
       uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: x64
+        
+    - name: Prepare CUDA package name for Linux
+      if: matrix.platform.os == 'ubuntu-22.04'
+      id: cuda_package_name
+      run: |
+        cuda_version="${{ matrix.cuda_version }}"
+        echo "PKG_VERSION=${cuda_version//./-}" >> $GITHUB_OUTPUT
 
     - name: Build wheels
       uses: pypa/cibuildwheel@v3.0.0
@@ -59,14 +66,14 @@ jobs:
         CUDA_VERSION: ${{ matrix.cuda_version }}
         
         # Configure cibuildwheel
-        CIBW_BUILD_FRONTEND: "build; args: --no-isolation"
+        CIBW_BUILD_FRONTEND: "build; args: --no-build-isolation"
         CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-*"
         CIBW_SKIP: ${{ matrix.cuda_version == '11.8' && 'cp312-*' || '' }}
         
         CIBW_BEFORE_ALL_LINUX: |
           set -euxo pipefail
           dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
-          dnf install -y cuda-toolkit-${{ matrix.cuda_version.replace('.', '-') }} gcc-c++ sparsehash-devel
+          dnf install -y cuda-toolkit-${{ steps.cuda_package_name.outputs.PKG_VERSION }} gcc-c++ sparsehash-devel
           bash .github/tools/install_pytorch.sh
           
         CIBW_BEFORE_BUILD_WINDOWS: |
