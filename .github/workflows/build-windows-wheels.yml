@@ -51,7 +51,7 @@ jobs:
       with:
         arch: x64
 
-    - name: Set PyTorch Index URL
+    - name: Set PyTorch Extra Index URL
       id: set-torch-url
       shell: bash
       run: |
@@ -67,7 +67,7 @@ jobs:
             exit 1
             ;;
         esac
-        echo "torch_index_url=https://download.pytorch.org/whl/$cuda_short" >> $GITHUB_OUTPUT
+        echo "torch_extra_index_url=https://download.pytorch.org/whl/$cuda_short" >> $GITHUB_OUTPUT
         
     - name: Build wheels
       uses: pypa/cibuildwheel@v3.0.0
@@ -80,8 +80,7 @@ jobs:
         CIBW_SKIP: ${{ matrix.cuda_version == '11.8' && 'cp312-*' || '' }}
         CIBW_BEFORE_BUILD_LINUX: |
           set -euxo pipefail
-          apt-get update
-          apt-get install -y build-essential libsparsehash-dev
+          dnf install -y gcc-c++ sparsehash-devel
         CIBW_BEFORE_BUILD_WINDOWS: |
           powershell -Command "Invoke-WebRequest -Uri https://github.com/sparsehash/sparsehash/archive/refs/tags/sparsehash-2.0.4.zip -OutFile sparsehash.zip"
           powershell -Command "Expand-Archive -Path sparsehash.zip -DestinationPath C:\"
@@ -92,7 +91,7 @@ jobs:
           FORCE_CUDA=1
           TORCH_CUDA_ARCH_LIST="7.5;8.0;8.6;8.9"
           MAX_JOBS=4
-          PIP_INDEX_URL=${{ steps.set-torch-url.outputs.torch_index_url }}
+          PIP_EXTRA_INDEX_URL=${{ steps.set-torch-url.outputs.torch_extra_index_url }}
         CIBW_ENVIRONMENT_WINDOWS: >
           CL="/O1 /MP4"
           DISTUTILS_USE_SDK=1
@@ -100,7 +99,7 @@ jobs:
           FORCE_CUDA=1
           TORCH_CUDA_ARCH_LIST="7.5;8.0;8.6;8.9"
           INCLUDE="$INCLUDE;C:\sparsehash\src"
-          PIP_INDEX_URL=${{ steps.set-torch-url.outputs.torch_index_url }}
+          PIP_EXTRA_INDEX_URL=${{ steps.set-torch-url.outputs.torch_extra_index_url }}
         CIBW_BEFORE_TEST_LINUX: |
           bash .github/tools/install_pytorch.sh
         CIBW_BEFORE_TEST_WINDOWS: |
