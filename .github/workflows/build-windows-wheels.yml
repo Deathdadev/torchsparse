@@ -31,7 +31,8 @@ jobs:
             os: ubuntu-22.04
           - name: windows
             os: windows-2022
-        cuda_version: ['11.8', '12.1', '12.4', '12.6', '12.8']
+        # Use valid, released CUDA versions to avoid dnf/apt errors
+        cuda_version: ['11.8', '12.1', '12.4']
 
     steps:
     - name: Checkout repository
@@ -66,7 +67,7 @@ jobs:
         CUDA_VERSION: ${{ matrix.cuda_version }}
         
         # Configure cibuildwheel
-        CIBW_BUILD_FRONTEND: "build; args: --no-build-isolation"
+        CIBW_BUILD_FRONTEND: "pip; args: --no-build-isolation"
         CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-*"
         CIBW_SKIP: ${{ matrix.cuda_version == '11.8' && 'cp312-*' || '' }}
         
@@ -92,8 +93,8 @@ jobs:
           TORCH_CUDA_ARCH_LIST="7.5;8.0;8.6;8.9"
           MAX_JOBS=4
           
+        # Removed `CL` variable to avoid conflicting with setup.py compiler flags
         CIBW_ENVIRONMENT_WINDOWS: >-
-          CL="/O1 /MP"
           DISTUTILS_USE_SDK=1
           MSSdk=1
           FORCE_CUDA=1
