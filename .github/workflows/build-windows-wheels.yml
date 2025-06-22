@@ -31,7 +31,7 @@ jobs:
             os: ubuntu-22.04
           - name: windows
             os: windows-2022
-        # Use valid, released CUDA versions to avoid dnf/apt errors
+        # Use valid, released CUDA toolkit package versions
         cuda_version: ['11.8', '12.1', '12.4']
 
     steps:
@@ -57,6 +57,7 @@ jobs:
       id: cuda_package_name
       run: |
         cuda_version="${{ matrix.cuda_version }}"
+        # dnf cuda package names use a dash instead of a dot
         echo "PKG_VERSION=${cuda_version//./-}" >> $GITHUB_OUTPUT
 
     - name: Build wheels
@@ -68,19 +69,26 @@ jobs:
         
         # Configure cibuildwheel
         CIBW_BUILD_FRONTEND: "pip; args: --no-build-isolation"
-        CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-*"
+        CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-*"
         CIBW_SKIP: ${{ matrix.cuda_version == '11.8' && 'cp312-*' || '' }}
         
         CIBW_BEFORE_ALL_LINUX: |
           set -euxo pipefail
+          # Install build dependencies, including CUDA toolkit
           dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
           dnf install -y cuda-toolkit-${{ steps.cuda_package_name.outputs.PKG_VERSION }} gcc-c++ sparsehash-devel
+          # Install python build dependencies
+          pip install cython
           bash .github/tools/install_pytorch.sh
           
         CIBW_BEFORE_BUILD_WINDOWS: |
+          # Install python build dependencies
+          pip install cython
+          # Download and install external dependencies
           powershell -Command "Invoke-WebRequest -Uri https://github.com/sparsehash/sparsehash/archive/refs/tags/sparsehash-2.0.4.zip -OutFile sparsehash.zip"
           powershell -Command "Expand-Archive -Path sparsehash.zip -DestinationPath C:\"
           powershell -Command "Rename-Item C:\sparsehash-sparsehash-2.0.4 C:\sparsehash"
+          # Install PyTorch
           powershell -ExecutionPolicy Bypass -File .github/tools/install_pytorch.ps1
           
         CIBW_ENVIRONMENT_LINUX: >-
